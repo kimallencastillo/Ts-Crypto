@@ -30,10 +30,10 @@ function App() {
   // null = is a value that value is just nothing  
 
   const [cryptos, setCryptos] = useState<Crypto[] | null> (null);  
-  const [selected, setSelected] = useState<Crypto | null>();
+  const [selected, setSelected] = useState<Crypto[] >([]);
   const [data, setData] = useState<ChartData<'line'>>();
   const [range, setRange] = useState<number>(30)
-
+  /*
   const [options, setOptions] = useState<ChartOptions<'line'>>({
     responsive: true,
     plugins: {
@@ -46,13 +46,15 @@ function App() {
     },
   },
   });
+   */
   useEffect(() => { 
     const url = 'https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&order=market_cap_desc&per_page=100&page=1&sparkline=false';
     axios.get(url).then((response) => {
       setCryptos(response.data)
     });
   }, []);
-
+ 
+  /*
   useEffect(() => {
     if(!selected) return
     axios
@@ -87,12 +89,26 @@ function App() {
         },})
       })
   }, [selected, range])
+  */
+  useEffect(() => {
+    console.log("SELECTED", selected) 
+  }, [selected])
+
+  function updateOwned (crypto: Crypto, amount: number) : void {
+    console.log(selected)
+    let temp = [...selected]
+    let tempObj = temp.find((c) => c.id === crypto.id)
+    if(tempObj){
+      tempObj.owned = amount
+      setSelected(temp)
+    }
+  }
   return (
     <>
     <div className="App">
     <select onChange={(e) => {
-      const c = cryptos?.find((x) => x.id === e.target.value)
-      setSelected(c);
+      const c = cryptos?.find((x) => x.id === e.target.value) as Crypto
+      setSelected([... selected, c]);
       // request 
       
       // update data state
@@ -104,25 +120,26 @@ function App() {
       
       <option value=''>Choose an Option</option>
     </select>
-    <select onChange={(e) => {
-     setRange(parseInt(e.target.value))
-    }} > 
-      <option value={30}>
-      30 days
-      </option>
-      <option value={7}>
-      7 days
-      </option>
-      <option value={1}>
-      1 days
-      </option>
-    </select>
-
+    
     </div>
-    { selected ? <CryptoSummary crypto={selected} /> : null }
-    {data ? <div style={{
+    {selected.map((s) => {return <CryptoSummary crypto={s} updateOwned={updateOwned}/> } )}
+    {/*data ? <div style={{
       width: 600,
-    }}><Line options={options} data={data} /></div>  : null}
+    }}><Line options={options} data={data} /></div>  : null*/}
+
+    {selected ? 'Portfolio is Worth: $' +   selected.map((select) => {
+      if(isNaN(select.owned)){
+        return 0; 
+      }
+      return (
+        select.current_price * select.owned
+      
+      )
+    }).reduce((prev, current)=> {
+      console.log('prev, current', prev, current)
+      return prev + current
+    }, 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2})
+     : null}
     </>
   );
   
