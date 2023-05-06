@@ -23,6 +23,7 @@ export default function CryptoSummary({crypto, updateOwned} : AppProps) :  JSX.E
                 type ="number"
                 style={{ margin : 10}}
                 value={amount} 
+                placeholder='0'
                 onChange={(e) => {
                      setAmount(parseFloat(e.target.value));
                      // set parent state calling a function passed in as a prop
